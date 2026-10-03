@@ -5,10 +5,7 @@ from sklearn.decomposition import TruncatedSVD
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.preprocessing import normalize
 
-# В ПР1 стоп-слова удаляются до лемматизации, поэтому формы «которые», «всех», «своих»
-# проходят фильтр и превращаются в леммы «который», «весь», «свой».
-# Для выделения тем такие слова бесполезны, поэтому они убираются уже на этапе TF-IDF.
-EXTRA_STOPWORDS = [
+PR2_STOPWORDS = [
     'это', 'этот', 'который', 'весь', 'свой', 'сам', 'самый', 'такой', 'наш', 'ваш', 'мой',
     'мы', 'вы', 'он', 'она', 'они', 'один', 'очень', 'без', 'мочь', 'быть', 'ещё', 'просто',
     'год', 'день', 'время', 'человек', 'сказать',
@@ -33,20 +30,19 @@ class LSAModel:
 
     def fit(self, texts: List[str]):
         """Обучение на нормализованных документах (леммы через пробел)."""
-        small_corpus = len(texts) < 100  # в маленьком корпусе пользователя редкие слова не отбрасываем
+        small_corpus = len(texts) < 100
         self.vectorizer = TfidfVectorizer(
             tokenizer=str.split,
             lowercase=False,
             token_pattern=None,
-            stop_words=EXTRA_STOPWORDS,
-            min_df=1 if small_corpus else 2,      # слово должно встретиться хотя бы в 2 документах
-            max_df=1.0 if small_corpus else 0.5,  # и не больше чем в половине документов
-            sublinear_tf=True,                    # tf заменяется на 1 + log(tf)
+            stop_words=PR2_STOPWORDS,
+            min_df=1 if small_corpus else 2,
+            max_df=1.0 if small_corpus else 0.5,
+            sublinear_tf=True,
         )
         tfidf = self.vectorizer.fit_transform(texts)
         self.terms = self.vectorizer.get_feature_names_out()
 
-        # Число тем не может быть больше числа документов и слов
         n_topics = max(1, min(self.n_topics, tfidf.shape[0] - 1, tfidf.shape[1] - 1))
         self.svd = TruncatedSVD(n_components=n_topics, n_iter=10, random_state=42)
         self.doc_vectors = normalize(self.svd.fit_transform(tfidf))
@@ -79,6 +75,6 @@ class LSAModel:
 
     def similarity(self, text_a: str, text_b: str) -> Tuple[float, float]:
         """Косинусное сходство двух текстов в пространстве TF-IDF и в пространстве тем LSA."""
-        tfidf = self.vectorizer.transform([text_a, text_b])  # строки TF-IDF уже нормированы по L2
+        tfidf = self.vectorizer.transform([text_a, text_b])
         topics = self.transform([text_a, text_b])
         return float(tfidf[0].multiply(tfidf[1]).sum()), float(topics[0] @ topics[1])

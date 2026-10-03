@@ -10,12 +10,12 @@ from sklearn.model_selection import train_test_split
 PR1_DIR = Path(__file__).resolve().parent.parent / "pr1"
 sys.path.append(str(PR1_DIR / "src"))
 
-from classifier import SentimentClassifierNB  # noqa: E402
-from normalizer import TextNormalizer  # noqa: E402
-from tokenizer import RegexTokenizer  # noqa: E402
+from classifier import SentimentClassifierNB
+from normalizer import TextNormalizer
+from tokenizer import RegexTokenizer
 
-from src.lsa import LSAModel  # noqa: E402
-from src.steering import SentimentSteering  # noqa: E402
+from src.lsa import LSAModel
+from src.steering import SentimentSteering
 
 PR1_DATA = PR1_DIR / "data" / "dataset.csv"
 PR1_CACHE = PR1_DIR / "data" / "cached_dataset.csv"
@@ -68,7 +68,6 @@ def load_corpus(data_path: str, tokenizer, normalizer):
         if is_pr1_corpus:
             pd.DataFrame({"processed_text": processed, "label": labels}).to_csv(PR1_CACHE, index=False)
 
-    # Документы, от которых после нормализации ничего не осталось, отбрасываются
     keep = [i for i, text in enumerate(processed) if text.strip()]
     texts = [texts[i] for i in keep]
     processed = [processed[i] for i in keep]
